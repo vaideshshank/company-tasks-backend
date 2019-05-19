@@ -4,13 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node server.js",
-    "heroku-postbuild": "cd frontend && npm install"
+    "start": "node server.js"
   },
   "engines": {
     "node":"8.11.3"
   },
-  "proxy": "https://limitless-spire-38110.herokuapp.com:5000",
   "keywords": [],
   "author": "",
   "license": "ISC",
