@@ -32,6 +32,7 @@ var userModel=()=>{
 
     schema.pre('save',function(next){
         var {password}=this;
+        console.log({password})
         this.password=bcrypt.hashSync(password,12);
         next();
     });
@@ -49,15 +50,53 @@ var userModel=()=>{
         })
     }
 
-    /*schema.statics.findByToken=function(token){
-        try{
-            var {id}=jwt.verify(token,provess.env.SECRET);
-        }catch{
-            res.status(400).json({message:'Access denied'});
-        }
-        userModel.findById(id,)
+    schema.methods.removeToken=function(token){
+        var user=this;
+        return user.update({
+            $pull:{
+                tokens:{token}
+            }
+        })
     }
-    return new mongoose.model('User',schema);*/
+
+    //model methods
+    schema.statics.signInToken=function(id){
+        var User=this,access="auth";
+        var token=jwt.sign({id,access},process.env.SECRET);
+        console.log({token});
+        return User.update({_id:id},{
+            $push:{
+                tokens:{access,token}
+            }
+        }).then(()=>{
+            return new Promise((resolve,reject)=>{
+                resolve(token);
+            })
+        }).catch(()=>{
+            return Promise.reject('error');
+        })
+    }
+
+
+
+    schema.statics.findByToken=function(token){
+        var User=this;
+        try{
+            var {id}=jwt.verify(token,process.env.SECRET);
+        }catch(e){
+            return Promise.reject('Authorization required');
+        }
+        //console.log(id);
+        
+        return User.findOne({
+            _id:id,
+            'tokens.token':token,
+            'tokens.access':'auth'
+        },"name email username")
+    }
+
+
+    return new mongoose.model('User',schema);
 }
 
 var clientModel=()=>{

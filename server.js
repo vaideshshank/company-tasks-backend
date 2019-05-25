@@ -6,11 +6,11 @@ const app=express();
 const cors=require('cors');
 const multer=require('multer');
 const path=require('path');
-//const {uploadImage}=require('./middlewares/middleware');
+const {authenticate}=require('./middlewares/middleware');
 
 
 const {saveClient,saveUser,getClients,singleClient,assignedTasks,
-    saveTask,listTasks,addClientToTask,deleteTask,
+    saveTask,listTasks,addClientToTask,deleteTask,signIn,signout,
     getClientsWithTasks,removeClientsFromTasks,uploadImg}=require('./db/model');
 
 
@@ -39,26 +39,30 @@ upload=multer({storage,
 
 app.use(bodyParser.urlencoded({extended:false}));
 app.use(express.json());    // Too important
-app.use(cors());
+app.use(cors({exposedHeaders:'x-auth'}));  //to expose jwt tokens still not working
 app.use(express.static(__dirname))
+//app.use('/api/signin',presignin);
 //app.use('/api/upload',uploadImage);
 //app.use('*',verifyUser);
 
 require('dotenv').config();
 const port=process.env.PORT;
 
-app.post('/api/clientForm',saveClient);
+app.post('/api/clientForm',authenticate,saveClient);
 app.post('/api/userForm',saveUser);
-app.get('/api/clients',getClients);
-app.get('/api/singleClient/:id',singleClient);
-app.post('/api/tasks',saveTask);
-app.get('/api/listTasks',listTasks);
-app.post('/api/addClientToTask',addClientToTask);
-app.get('/api/clientsWithTasks/:id',getClientsWithTasks);
-app.post('/api/removeClientFromTask',removeClientsFromTasks);
-app.post('/api/deleteTask',deleteTask);
-app.get('/api/assignedTasks',assignedTasks);
-app.post('/api/upload',upload.single('photo'),uploadImg)
+app.post('/api/signin',signIn);
+app.get('/api/signout',authenticate,signout);
+app.get('/api/clients',authenticate,getClients);
+app.get('/api/singleClient/:id',authenticate,singleClient);
+app.post('/api/tasks',authenticate,saveTask);
+app.get('/api/listTasks',authenticate,listTasks);
+app.post('/api/addClientToTask',authenticate,addClientToTask);
+app.get('/api/clientsWithTasks/:id',authenticate,getClientsWithTasks);
+app.post('/api/removeClientFromTask',authenticate,removeClientsFromTasks);
+app.post('/api/deleteTask',authenticate,deleteTask);
+app.get('/api/assignedTasks',authenticate,assignedTasks);
+app.post('/api/upload',upload.single('photo'),uploadImg);
+
 
 app.listen(port,()=>{
     console.log("Inintialized");
