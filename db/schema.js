@@ -16,7 +16,7 @@ var connect=()=>{
 
 var userModel=()=>{
     var schema=mongoose.Schema({
-        name:{type:String,required:true,trim:true},
+        name:{type:String,rgitequired:true,trim:true},
         username:{type:String,required:true,trim:true,minlength:5,unique:true},
         email:{type:String,required:true,
             validate:{validator:(value)=>{
