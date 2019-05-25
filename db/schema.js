@@ -49,7 +49,15 @@ var userModel=()=>{
         })
     }
 
-    return new mongoose.model('User',schema);
+    /*schema.statics.findByToken=function(token){
+        try{
+            var {id}=jwt.verify(token,provess.env.SECRET);
+        }catch{
+            res.status(400).json({message:'Access denied'});
+        }
+        userModel.findById(id,)
+    }
+    return new mongoose.model('User',schema);*/
 }
 
 var clientModel=()=>{

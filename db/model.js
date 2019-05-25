@@ -7,8 +7,10 @@ clientModel=clientModel();userModel=userModel();taskModel=taskModel();
 var saveClient=(req,res)=>{
     var {name,email,phone,address,profession,image}=req.body;
     //To be removed after making jwt auth
+    console.log(image);
     var user='5cdf185ef5cc7026484a3813';
-    console.log({name,email,phone,address,profession,image});
+    if(!image){image='uploads/placeholder.jpg'}
+    //console.log({name,email,phone,address,profession,image});
     var client=new clientModel({name,email,phone,address,profession,image,user})
     client.save().then(()=>{
         console.log('CLIENT information saved');
@@ -17,6 +19,7 @@ var saveClient=(req,res)=>{
         console.log(err);
         res.status(400).json({message:"CLIENT info not saved. Server failure."});
     })
+    //res.end();
 }
 
 var saveUser=(req,res)=>{
@@ -97,21 +100,18 @@ var addClientToTask=(req,res)=>{
 
 var getClientsWithTasks=(req,res)=>{
     var {id}=req.params,user='5cdf185ef5cc7026484a3813';
-    console.log("ID : "+id);
-    // taskModel.find({"clients.id":id,user},'_id clients').then((data)=>{
-    //    var newdata=_.map(data,(single)=>{
-    //        var duration,dat=_.find(single.clients,{id});
-    //        console.log(dat);
-    //        if(dat==undefined){
-    //         duration=null;
-    //         return {data,duration,clients:null};
-    //        }else{
-    //         duration=dat[0].duration;
-    //         return {data,duration,clients:null};
-    //        }
-    //    })
-    // res.status(200).json(newdata);
-    taskModel.find({"clients.id":id,user},'_id').then((data)=>{
+    taskModel.find({"clients.id":id,user},'_id clients').then((data)=>{
+        var clientInfo=[];
+        _.each(data,({clients},ind)=>{
+            clientInfo=_.filter(clients,(single,ind)=>{
+                return single.id==id;
+            });
+            var timeInfo={};
+            _.map(clientInfo,({duration},ind)=>{
+                timeInfo={duration};
+            })
+            data[ind].clients=timeInfo;
+        })
         res.status(200).json(data);
     }).catch(err=>{
         console.log(err);
@@ -144,5 +144,45 @@ var deleteTask=(req,res)=>{
     })
 }
 
-module.exports={saveClient,saveUser,getClients,singleClient,saveTask,
-    listTasks,addClientToTask,getClientsWithTasks,removeClientsFromTasks,deleteTask};
+var assignedTasks=(req,res)=>{
+    var user='5cdf185ef5cc7026484a3813';
+    taskModel.find({user},"taskname description clients").then((tasks)=>{
+        return tasks;
+    }).then((tasks)=>{
+        var allTasks=[];
+        allTasks=_.map(tasks,async (task)=>{  
+            var obj=[];
+            _.each(task.clients,({id})=>{
+                obj.push({_id:id});
+            });
+            return clientModel.find({$or:obj},"name").then(names=>{
+                task.clients=names;
+                console.log(task);
+                return task;
+            }).catch(err=>{
+                return {task,clients:[]};
+            })
+            
+        });
+        return res.status(200).json(allTasks);
+    })
+    .catch(err=>{
+        console.log(err);
+        res.status(400).json({message:'Server failure'});
+    })
+}
+
+var uploadImg=(req,res)=>{
+    if(req.file) {
+        res.status(200).json({
+            'message':'Image uploaded successfully',
+            'path':req.file.path
+        });
+    }
+    else{
+        console.log('error')
+    };
+}
+
+module.exports={saveClient,saveUser,getClients,singleClient,saveTask,assignedTasks,
+    listTasks,addClientToTask,getClientsWithTasks,removeClientsFromTasks,deleteTask,uploadImg};
