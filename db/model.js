@@ -1,4 +1,5 @@
 const mongoose=require('mongoose');
+const fs=require('fs');
 var _=require('lodash');
 var bcrypt=require('bcryptjs');
 var {connect,clientModel,userModel,taskModel,taskModel}=require('./schema');
@@ -11,10 +12,8 @@ require('dotenv').config();
 var saveClient=(req,res)=>{
     var {name,email,phone,address,profession,image}=req.body;
     //To be removed after making jwt auth
-    console.log(image);
     var user=req.user._id;
     if(!image){image='uploads/placeholder.jpg'}
-    //console.log({name,email,phone,address,profession,image});
     var client=new clientModel({name,email,phone,address,profession,image,user})
     client.save().then(()=>{
         console.log('CLIENT information saved');
@@ -27,11 +26,11 @@ var saveClient=(req,res)=>{
 }
 
 var deleteClient=(req,res)=>{
-    var {id}=req.body;
-    console.log(id);
+    var {id,image}=req.body;
     var user=req.user._id;
     clientModel.where().findOneAndDelete({_id:id,user}).then(()=>{
-        console.log('Client deleted');
+        console.log('Client information deleted');
+        if(image!="uploads/placeholder.jpg") fs.unlinkSync(__dirname+`/../${image}`);
         res.status(200).json({message:"CLIENT deleted from your client list"});
     }).catch(err=>{
         console.log(err);
@@ -56,10 +55,8 @@ var saveUser=(req,res)=>{
 
 var signIn=(req,res)=>{
     var {username,password}=req.body;
-    console.log(req.body);
     userModel.findOne({username},"_id password")
     .then((data)=>{
-        console.log(data);
         bcrypt.compare(password,data.password,(err,resp)=>{
             if(!err){
                 userModel.signInToken(data._id).then((token)=>{
@@ -79,7 +76,6 @@ var signIn=(req,res)=>{
 }
 
 var signout=(req,res)=>{
-    console.log(req.user);
     req.user.removeToken(req.token).then((resp)=>{
         console.log("User logged out");
         res.status(200).json({message:"User logged out"})
@@ -91,14 +87,13 @@ var signout=(req,res)=>{
 
 var getClients=(req,res)=>{
     var user=req.user._id;
-    clientModel.find({user},"_id name email profession").then((data)=>{
+    clientModel.find({user},"_id name email profession image").then((data)=>{
         res.status(200).json(data);
     })
 }
 
 var singleClient=(req,res)=>{
     var {id}=req.params;
-    console.log(id);
     var user=req.user._id;
     clientModel.findOne({_id:id,user}).then(data=>{
         return data;
@@ -140,9 +135,7 @@ var listTasks=(req,res)=>{
 var addClientToTask=(req,res)=>{
     var {user_id,client_id,task_id,duration}=req.body;
     user_id=req.user._id;
-    console.log({user_id,client_id,task_id,duration});
     taskModel.update({user:user_id,_id:task_id},{$push:{clients:{id:client_id,duration}}}).then((data)=>{
-        console.log(data);
         res.status(200).json({message:'Client Added to Task'});
     }).catch(err=>{
         console.log(err);
@@ -173,7 +166,6 @@ var getClientsWithTasks=(req,res)=>{
 
 var removeClientsFromTasks=(req,res)=>{
     var {client_id,user_id,task_id}=req.body;
-    console.log(task_id,client_id);
     user_id=req.user._id;
     taskModel.update({_id:task_id,user:user_id},{$pull:{
         clients:{id:client_id}
@@ -209,7 +201,6 @@ var assignedTasks=(req,res)=>{
             });
             return clientModel.find({$or:obj},"name").then(names=>{
                 task.clients=names;
-                console.log(task);
                 return task;
             }).catch(err=>{
                 return {task,clients:[]};
