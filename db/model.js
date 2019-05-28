@@ -2,6 +2,7 @@ const mongoose=require('mongoose');
 var _=require('lodash');
 var bcrypt=require('bcryptjs');
 var {connect,clientModel,userModel,taskModel,taskModel}=require('./schema');
+
 connect();
 clientModel=clientModel();userModel=userModel();taskModel=taskModel();
 require('dotenv').config();
@@ -23,6 +24,19 @@ var saveClient=(req,res)=>{
         res.status(400).json({message:"CLIENT info not saved. Server failure."});
     })
     //res.end();
+}
+
+var deleteClient=(req,res)=>{
+    var {id}=req.body;
+    console.log(id);
+    var user=req.user._id;
+    clientModel.where().findOneAndDelete({_id:id,user}).then(()=>{
+        console.log('Client deleted');
+        res.status(200).json({message:"CLIENT deleted from your client list"});
+    }).catch(err=>{
+        console.log(err);
+        res.status(400).json({message:"CLIENT not deleted. Server failure."});
+    })
 }
 
 var saveUser=(req,res)=>{
@@ -222,6 +236,6 @@ var uploadImg=(req,res)=>{
     };
 }
 
-module.exports={saveClient,saveUser,getClients,singleClient,saveTask,assignedTasks,
+module.exports={saveClient,deleteClient,saveUser,getClients,singleClient,saveTask,assignedTasks,
     listTasks,addClientToTask,getClientsWithTasks,removeClientsFromTasks,deleteTask,uploadImg,
     signIn,signout,userModel};

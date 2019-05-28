@@ -11,29 +11,30 @@ const {authenticate}=require('./middlewares/middleware');
 
 const {saveClient,saveUser,getClients,singleClient,assignedTasks,
     saveTask,listTasks,addClientToTask,deleteTask,signIn,signout,
-    getClientsWithTasks,removeClientsFromTasks,uploadImg}=require('./db/model');
+    getClientsWithTasks,removeClientsFromTasks,uploadImg,deleteClient}=require('./db/model');
 
 
 //middlewares
 var storage = multer.diskStorage({
-        destination: function (req, file, cb) {
-          cb(null, './uploads') //Destination folder
-        },
-        filename: function (req, file, cb) {
-          cb(null, 'img'+Date.now()+'.jpg') //File name after saving
-        }
-    })  
+    destination: function (req, file, cb) {
+        cb(null, './uploads') //Destination folder
+    },
+    filename: function (req, file, cb) {
+        cb(null, 'img'+Date.now()+'.jpg') //File name after saving
+    }
+})
+
 upload=multer({storage, 
     fileFilter: function (req, file, cb) {
-        var filetypes = /jpeg|jpg|png/;
-        var mimetype = filetypes.test(file.mimetype);
-        var extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-        
-        if (mimetype && extname) {
-            return cb(null, true);
-        }
-        cb("Error: File upload only supports the following filetypes - " + filetypes);
-        }
+    var filetypes = /jpg|jpeg|png/;
+    var mimetype = filetypes.test(file.mimetype);
+    var extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    
+    if (mimetype && extname) {
+        return cb(null, true);
+    }
+    cb("Error: File upload only supports the following filetypes - " + filetypes);
+    }
 });
     
 
@@ -49,6 +50,7 @@ require('dotenv').config();
 const port=process.env.PORT;
 
 app.post('/api/clientForm',authenticate,saveClient);
+app.delete('/api/deleteClient',authenticate,deleteClient);
 app.post('/api/userForm',saveUser);
 app.post('/api/signin',signIn);
 app.get('/api/signout',authenticate,signout);
