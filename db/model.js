@@ -45,7 +45,7 @@ var saveUser=(req,res)=>{
         console.log('USER information saved');
         return user.generateAuthToken();
     }).then(token=>{
-        res.status(200).header('x-auth',token).json({message:'USER information saved'});
+        res.status(200).header('x-auth',token).json({message:'USER information saved',name});
     })
     .catch(err=>{
         console.log(err);
@@ -54,14 +54,15 @@ var saveUser=(req,res)=>{
 }
 
 var signIn=(req,res)=>{
-    var {username,password}=req.body;
-    userModel.findOne({username},"_id password")
+    var {type,password}=req.body;
+    console.log({[type] : req.body[type]});
+    userModel.findOne({[type]:req.body[type]},"_id password name")
     .then((data)=>{
         bcrypt.compare(password,data.password,(err,resp)=>{
             if(!err){
                 userModel.signInToken(data._id).then((token)=>{
                     req.token=token;
-                    res.status(200).header("x-auth",token).json({'message':'User successfully logged in'});
+                    res.status(200).header("x-auth",token).json({'message':'User successfully logged in',name:data.name});
                 }).catch(err=>{ res.status(400).json({'message':'errer'});})
             }else{
                 res.status(400).json({'message':'Wrong Password entered'});
