@@ -6,7 +6,7 @@ require('dotenv').config();
 
 
 var connect=()=>{
-    mongoose.connect(`mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@ds159036.mlab.com:59036/company-tasks`,
+    mongoose.connect(`mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@ds239097.mlab.com:39097/company-tasks`,
                         { useNewUrlParser: true }).then(()=>{
         console.log('Database connection made');
     }).catch(err=>{
